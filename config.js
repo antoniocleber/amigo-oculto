@@ -8,7 +8,7 @@ window.AMIGO_OCULTO_CONFIG = {
   // Exemplo: 'https://script.google.com/macros/s/AKfycb.../exec'
   SCRIPT_URL: '',
 
-  EVENT_TITLE: 'Natal Dos Friends - Amigo Secreto',
+  EVENT_TITLE: 'Natal Dos Friends',
   EVENT_SUBTITLE: 'Natal & Fim de Ano 2026',
   GIFT_VALUE: 'R$ 50,00',
 };
