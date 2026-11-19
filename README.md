@@ -1,6 +1,6 @@
-﻿# Amigo Oculto 2026
+﻿# Natal Dos Friends - Amigo Secreto
 
-Site oficial do sorteio de Amigo Oculto (sigilo total, regra de casais e registro apenas de participacao no Google Sheets).
+Site oficial do sorteio de Amigo Secreto.
 
 - Site: https://antoniocleber.github.io/amigo-oculto/
 

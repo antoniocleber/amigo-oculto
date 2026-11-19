@@ -205,10 +205,10 @@ body {
 .hero__title {
   margin: 0 0 14px;
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 2.1rem;
+  font-size: clamp(1.48rem, 5.2vw, 1.85rem);
   font-weight: 800;
   color: var(--crimson);
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 .badges {
@@ -758,7 +758,7 @@ body {
   }
 
   .hero__title {
-    font-size: 1.85rem;
+    font-size: 1.5rem;
   }
 
   .status-list {
