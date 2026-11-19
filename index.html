@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Amigo Oculto 2026 — Sorteio Oficial</title>
+  <meta
+    name="description"
+    content="Selecione seu nome na lista e descubra quem é o seu Amigo Oculto! Valor sugerido do presente: R$ 50,00. Sorteio sigiloso com regra de casais."
+  />
+
+  <!-- Open Graph / Prévia bonita no WhatsApp -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="🎁 Amigo Oculto 2026 — Faça seu Sorteio!" />
+  <meta
+    property="og:description"
+    content="Escolha seu nome e descubra seu Amigo Oculto em segredo. Valor sugerido do presente: R$ 50,00."
+  />
+  <meta property="og:url" content="https://antoniocleber.github.io/amigo-oculto/" />
+  <meta property="og:image" content="https://antoniocleber.github.io/amigo-oculto/og-image.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta name="theme-color" content="#6E141B" />
+
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <!-- Neve / brilho sutil decorativo -->
+  <div class="snowflakes" aria-hidden="true">
+    <span>✦</span><span>❄</span><span>✦</span><span>❄</span><span>✦</span>
+    <span>❄</span><span>✦</span><span>❄</span><span>✦</span><span>❄</span>
+  </div>
+
+  <!-- Canvas de confetes na revelação -->
+  <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
+  <main class="page">
+    <!-- Banner de Modo Demonstração (oculto em produção) -->
+    <div id="demo-banner" class="demo-banner hidden" role="status">
+      <div class="demo-banner__text">
+        <strong>Modo Demonstração:</strong> planilha Google ainda não conectada em <code>config.js</code> (sorteios simulados localmente).
+      </div>
+      <button type="button" id="demo-reset-btn" class="demo-banner__btn">Resetar teste</button>
+    </div>
+
+    <article class="card">
+      <header class="hero">
+        <div class="hero__icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="52" height="52">
+            <defs>
+              <linearGradient id="giftGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#F7E38C" />
+                <stop offset="100%" stop-color="#C89328" />
+              </linearGradient>
+            </defs>
+            <rect x="10" y="27" width="44" height="29" rx="5" fill="#8B1E24" />
+            <rect x="6" y="19" width="52" height="10" rx="4" fill="#A4242B" />
+            <rect x="28" y="19" width="8" height="37" fill="url(#giftGold)" />
+            <rect x="10" y="37" width="44" height="6" fill="url(#giftGold)" />
+            <path d="M32 19 C24 7, 13 11, 19 19 Z" fill="url(#giftGold)" />
+            <path d="M32 19 C40 7, 51 11, 45 19 Z" fill="url(#giftGold)" />
+          </svg>
+        </div>
+
+        <p id="event-subtitle" class="hero__eyebrow">Natal &amp; Fim de Ano 2026</p>
+        <h1 id="event-title" class="hero__title">Amigo Oculto</h1>
+
+        <div class="badges">
+          <span class="badge badge--gold">
+            <span aria-hidden="true">🎁</span>
+            Valor sugerido: <strong id="gift-value">R$ 50,00</strong>
+          </span>
+          <span class="badge badge--pine">
+            <span aria-hidden="true">🔒</span>
+            Sigilo total · Casais não se tiram
+          </span>
+        </div>
+      </header>
+
+      <!-- Progresso geral -->
+      <section class="progress-box" aria-label="Progresso do sorteio">
+        <div class="progress-box__top">
+          <span id="progress-label" class="progress-box__label">Carregando participantes...</span>
+          <span id="progress-percent" class="progress-box__percent">—</span>
+        </div>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="progress-fill" class="progress-bar__fill"></div>
+        </div>
+      </section>
+
+      <!-- Mensagem de erro/aviso -->
+      <div id="alert-box" class="alert hidden" role="alert"></div>
+
+      <!-- ETAPA 1: Seleção do participante -->
+      <section id="step-select" class="step">
+        <div class="field">
+          <label for="participant-select" class="field__label">Quem é você?</label>
+          <div class="select-wrap">
+            <select id="participant-select" class="select" disabled>
+              <option value="">Carregando lista...</option>
+            </select>
+          </div>
+          <p class="field__hint">
+            Selecione apenas o <strong>seu próprio nome</strong>. Cada pessoa só pode sortear uma única vez.
+          </p>
+        </div>
+
+        <button type="button" id="start-draw-btn" class="btn btn--primary" disabled>
+          <span aria-hidden="true">✨</span>
+          <span>Sortear meu Amigo Oculto</span>
+        </button>
+
+        <div id="all-done-box" class="all-done hidden">
+          <p class="all-done__title">🎄 Todos já sortearam!</p>
+          <p class="all-done__text">
+            Os 14 participantes concluíram o sorteio. Agora é só preparar o presente de <strong id="gift-value-done">R$ 50,00</strong> e guardar segredo até a revelação!
+          </p>
+        </div>
+
+        <details id="status-details" class="status-details hidden">
+          <summary>Ver quem já sorteou</summary>
+          <ul id="status-list" class="status-list"></ul>
+        </details>
+      </section>
+
+      <!-- ETAPA 2: Carregando / Animação do sorteio -->
+      <section id="step-loading" class="step step--center hidden" aria-live="polite">
+        <div class="spinner-gift" aria-hidden="true">🎁</div>
+        <h2 class="step-loading__title">Sorteando seu Amigo Oculto...</h2>
+        <p class="step-loading__text">Embaralhando os nomes em segredo absoluto.</p>
+      </section>
+
+      <!-- ETAPA 3: Revelação Única -->
+      <section id="step-reveal" class="step step--center hidden" aria-live="assertive">
+        <p class="reveal__greeting">
+          Olá, <strong id="reveal-giver"></strong>!
+        </p>
+        <p class="reveal__label">Seu Amigo Oculto é:</p>
+
+        <div class="reveal-card">
+          <span class="reveal-card__sparkle reveal-card__sparkle--left" aria-hidden="true">✦</span>
+          <span id="reveal-name" class="reveal-card__name">—</span>
+          <span class="reveal-card__sparkle reveal-card__sparkle--right" aria-hidden="true">✦</span>
+        </div>
+
+        <div class="warning-box" role="note">
+          <div class="warning-box__icon" aria-hidden="true">📸</div>
+          <div>
+            <strong>Tire um print ou anote agora!</strong>
+            <p>
+              Por segurança e sigilo, este resultado <strong>não fica salvo na planilha</strong> e
+              <strong>não poderá ser visto novamente</strong> depois que você fechar esta tela.
+            </p>
+          </div>
+        </div>
+
+        <p class="reveal__gift-note">
+          Lembrete: valor sugerido do presente é <strong id="gift-value-reveal">R$ 50,00</strong>.
+        </p>
+
+        <label class="ack-check">
+          <input type="checkbox" id="ack-saved-checkbox" />
+          <span>Já anotei ou tirei print do nome acima</span>
+        </label>
+
+        <button type="button" id="hide-result-btn" class="btn btn--secondary" disabled>
+          <span aria-hidden="true">🙈</span>
+          <span>Ocultar resultado e finalizar</span>
+        </button>
+      </section>
+
+      <!-- ETAPA 4: Finalizado com segurança -->
+      <section id="step-finished" class="step step--center hidden">
+        <div class="finished__icon" aria-hidden="true">🎄</div>
+        <h2 class="finished__title">Sorteio concluído!</h2>
+        <p class="finished__text">
+          O resultado foi ocultado da tela com segurança e sua participação já foi registrada na lista.
+          Guarde bem o segredo até a hora da revelação!
+        </p>
+        <button type="button" id="back-home-btn" class="btn btn--ghost">
+          Voltar para a tela inicial
+        </button>
+      </section>
+
+      <footer class="footer">
+        <p>Nenhum nome sorteado é salvo na planilha · Apenas quem já participou é registrado.</p>
+      </footer>
+    </article>
+  </main>
+
+  <!-- Modal de Confirmação Dupla -->
+  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal__backdrop" data-close-modal="true"></div>
+    <div class="modal__dialog">
+      <div class="modal__badge" aria-hidden="true">🎄</div>
+      <h2 id="confirm-title" class="modal__title">Confirmar identidade</h2>
+      <p class="modal__text">
+        Você selecionou <strong id="confirm-name" class="modal__highlight"></strong>.
+      </p>
+      <p class="modal__subtext">
+        Confirma que é você mesmo(a)? O resultado aparecerá <strong>uma única vez</strong> — prepare-se para tirar print ou anotar!
+      </p>
+      <div class="modal__actions">
+        <button type="button" id="confirm-cancel-btn" class="btn btn--ghost">Cancelar</button>
+        <button type="button" id="confirm-proceed-btn" class="btn btn--primary">Sim, sou eu! Sortear</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
