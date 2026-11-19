@@ -6,6 +6,14 @@
   const PARAMS = new URLSearchParams(window.location.search);
   const IS_DEMO = PARAMS.get('demo') === '1' || !SCRIPT_URL;
 
+  // Chaves de trava por aparelho (NUNCA salvam o nome sorteado — apenas status do aparelho)
+  const STORAGE_DEVICE_ID = 'natal_friends_2026_device_id';
+  const STORAGE_LOCK_PROD = 'natal_friends_2026_device_lock';
+  const STORAGE_LOCK_DEMO = 'natal_friends_2026_demo_lock';
+  const COOKIE_DEVICE_ID = 'nf26_did';
+  const COOKIE_LOCK_PROD = 'nf26_lock';
+  const COOKIE_LOCK_DEMO = 'nf26_dlock';
+
   // Lista e casais usados APENAS no Modo Demonstração local (quando SCRIPT_URL ainda está vazia)
   const DEMO_PARTICIPANTS = [
     'Camila Nascimento',
@@ -36,8 +44,11 @@
     participants: [],
     selectedParticipant: '',
     isDrawing: false,
+    cycleId: '',
+    demoCycleId: 'demo-cycle-1',
     demoMap: null,
     demoDrawn: {},
+    demoUsedDevices: {},
   };
 
   // Elementos da UI
@@ -49,6 +60,7 @@
     giftValue: document.getElementById('gift-value'),
     giftValueDone: document.getElementById('gift-value-done'),
     giftValueReveal: document.getElementById('gift-value-reveal'),
+    giftValueLocked: document.getElementById('gift-value-locked'),
     progressLabel: document.getElementById('progress-label'),
     progressPercent: document.getElementById('progress-percent'),
     progressFill: document.getElementById('progress-fill'),
@@ -63,11 +75,13 @@
     allDoneBox: document.getElementById('all-done-box'),
     statusDetails: document.getElementById('status-details'),
     statusList: document.getElementById('status-list'),
+    lockedStatusDetails: document.getElementById('locked-status-details'),
+    lockedStatusList: document.getElementById('locked-status-list'),
+    finishedParticipantNote: document.getElementById('finished-participant-note'),
     revealGiver: document.getElementById('reveal-giver'),
     revealName: document.getElementById('reveal-name'),
     ackCheckbox: document.getElementById('ack-saved-checkbox'),
     hideResultBtn: document.getElementById('hide-result-btn'),
-    backHomeBtn: document.getElementById('back-home-btn'),
     confirmModal: document.getElementById('confirm-modal'),
     confirmName: document.getElementById('confirm-name'),
     confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
@@ -76,7 +90,129 @@
   };
 
   // ============================================================================
-  // MODO DEMONSTRAÇÃO (SOMENTE EM MEMÓRIA — SEM GRAVAR EM STORAGE)
+  // BLOQUEIO POR APARELHO (localStorage + Cookie + deviceId no servidor)
+  // ============================================================================
+
+  function setCookie(name, value, days) {
+    try {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie =
+        name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+    } catch (_e) {
+      // ignora se cookies estiverem bloqueados
+    }
+  }
+
+  function getCookie(name) {
+    try {
+      const prefix = name + '=';
+      const parts = document.cookie.split(';');
+      for (let i = 0; i < parts.length; i++) {
+        const item = parts[i].trim();
+        if (item.indexOf(prefix) === 0) {
+          return decodeURIComponent(item.slice(prefix.length));
+        }
+      }
+    } catch (_e) {
+      // ignora
+    }
+    return '';
+  }
+
+  function deleteCookie(name) {
+    try {
+      document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax';
+    } catch (_e) {
+      // ignora
+    }
+  }
+
+  function generateUuid() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+    return 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+  }
+
+  function getOrCreateDeviceId() {
+    let id = '';
+    try {
+      id = window.localStorage.getItem(STORAGE_DEVICE_ID) || '';
+    } catch (_e) {
+      // ignora
+    }
+    if (!id) {
+      id = getCookie(COOKIE_DEVICE_ID);
+    }
+    if (!id) {
+      id = generateUuid();
+    }
+    try {
+      window.localStorage.setItem(STORAGE_DEVICE_ID, id);
+    } catch (_e) {
+      // ignora
+    }
+    setCookie(COOKIE_DEVICE_ID, id, 365);
+    return id;
+  }
+
+  function getLockKeys() {
+    return IS_DEMO
+      ? { storage: STORAGE_LOCK_DEMO, cookie: COOKIE_LOCK_DEMO }
+      : { storage: STORAGE_LOCK_PROD, cookie: COOKIE_LOCK_PROD };
+  }
+
+  function readLocalLock() {
+    const keys = getLockKeys();
+    let raw = '';
+    try {
+      raw = window.localStorage.getItem(keys.storage) || '';
+    } catch (_e) {
+      // ignora
+    }
+    if (!raw) {
+      raw = getCookie(keys.cookie);
+    }
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.locked) return parsed;
+    } catch (_e) {
+      // ignora
+    }
+    return null;
+  }
+
+  function saveLocalLock(participant, cycleId) {
+    const keys = getLockKeys();
+    // Salva APENAS status de bloqueio e quem usou o aparelho — NUNCA quem foi sorteado
+    const payload = JSON.stringify({
+      locked: true,
+      participant: participant || '',
+      cycleId: cycleId || '',
+    });
+    try {
+      window.localStorage.setItem(keys.storage, payload);
+    } catch (_e) {
+      // ignora
+    }
+    setCookie(keys.cookie, payload, 365);
+  }
+
+  function clearLocalLock() {
+    const keys = getLockKeys();
+    try {
+      window.localStorage.removeItem(keys.storage);
+    } catch (_e) {
+      // ignora
+    }
+    deleteCookie(keys.cookie);
+  }
+
+  const DEVICE_ID = getOrCreateDeviceId();
+
+  // ============================================================================
+  // MODO DEMONSTRAÇÃO (SOMENTE EM MEMÓRIA — SEM GRAVAR QUEM FOI SORTEADO)
   // ============================================================================
 
   function isDemoCouple(a, b) {
@@ -98,6 +234,8 @@
 
   function initDemoState() {
     state.demoDrawn = {};
+    state.demoUsedDevices = {};
+    state.demoCycleId = 'demo-' + Date.now();
     for (let attempt = 0; attempt < 2000; attempt++) {
       const shuffled = shuffle(DEMO_PARTICIPANTS);
       let ok = true;
@@ -129,15 +267,26 @@
       const completed = participants.filter(function (p) {
         return p.drawn;
       }).length;
+      const lockedParticipant = state.demoUsedDevices[DEVICE_ID] || null;
       return {
         ok: true,
+        cycleId: state.demoCycleId,
+        deviceLocked: Boolean(lockedParticipant),
+        lockedParticipant: lockedParticipant,
         total: DEMO_PARTICIPANTS.length,
         completed: completed,
         participants: participants,
       };
     }
 
-    const url = SCRIPT_URL + (SCRIPT_URL.includes('?') ? '&' : '?') + 'action=list&_t=' + Date.now();
+    const sep = SCRIPT_URL.includes('?') ? '&' : '?';
+    const url =
+      SCRIPT_URL +
+      sep +
+      'action=list&deviceId=' +
+      encodeURIComponent(DEVICE_ID) +
+      '&_t=' +
+      Date.now();
     const res = await fetch(url, {
       method: 'GET',
       redirect: 'follow',
@@ -153,6 +302,15 @@
   async function apiDrawParticipant(participant) {
     if (IS_DEMO) {
       await delay(950);
+      if (state.demoUsedDevices[DEVICE_ID]) {
+        return {
+          ok: false,
+          code: 'DEVICE_ALREADY_USED',
+          cycleId: state.demoCycleId,
+          lockedParticipant: state.demoUsedDevices[DEVICE_ID],
+          message: 'Este aparelho já realizou um sorteio anteriormente.',
+        };
+      }
       if (state.demoDrawn[participant] || !state.demoMap[participant]) {
         return {
           ok: false,
@@ -163,8 +321,10 @@
       const drawnName = state.demoMap[participant];
       delete state.demoMap[participant];
       state.demoDrawn[participant] = true;
+      state.demoUsedDevices[DEVICE_ID] = participant;
       return {
         ok: true,
+        cycleId: state.demoCycleId,
         participant: participant,
         drawnName: drawnName,
         completed: Object.keys(state.demoDrawn).length,
@@ -182,6 +342,7 @@
       body: JSON.stringify({
         action: 'draw',
         participant: participant,
+        deviceId: DEVICE_ID,
       }),
     });
 
@@ -225,12 +386,64 @@
     els.progressBar.setAttribute('aria-valuenow', String(pct));
   }
 
+  function renderStatusList(targetUl, targetDetails) {
+    targetUl.innerHTML = '';
+    state.participants.forEach(function (p) {
+      const li = document.createElement('li');
+      li.className = 'status-list__item' + (p.drawn ? ' status-list__item--done' : '');
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'status-list__name';
+      nameSpan.textContent = p.name;
+
+      const iconSpan = document.createElement('span');
+      iconSpan.textContent = p.drawn ? '✅' : '⏳';
+      iconSpan.setAttribute('aria-label', p.drawn ? 'Já sorteou' : 'Pendente');
+
+      li.appendChild(nameSpan);
+      li.appendChild(iconSpan);
+      targetUl.appendChild(li);
+    });
+    targetDetails.classList.toggle('hidden', state.participants.length === 0);
+  }
+
+  function showLockedScreen(participantName) {
+    if (participantName) {
+      els.finishedParticipantNote.textContent = 'Participação registrada: ' + participantName;
+      els.finishedParticipantNote.classList.remove('hidden');
+    } else {
+      els.finishedParticipantNote.textContent = '';
+      els.finishedParticipantNote.classList.add('hidden');
+    }
+    renderStatusList(els.lockedStatusList, els.lockedStatusDetails);
+    showStep(els.stepFinished);
+  }
+
   function renderParticipants(data) {
     state.participants = data.participants || [];
+    state.cycleId = data.cycleId || '';
     const total = data.total || state.participants.length;
     const completed = data.completed || 0;
 
     updateProgress(completed, total);
+
+    // Verifica trava por aparelho (tanto no servidor quanto local)
+    const localLock = readLocalLock();
+
+    // Se o organizador resetou o sorteio (novo cycleId no servidor), destrava testes antigos automaticamente
+    if (!IS_DEMO && localLock && localLock.cycleId && state.cycleId && localLock.cycleId !== state.cycleId) {
+      clearLocalLock();
+    }
+
+    const activeLocalLock = readLocalLock();
+    if (data.deviceLocked || activeLocalLock) {
+      const lockedWho = data.lockedParticipant || (activeLocalLock && activeLocalLock.participant) || '';
+      if (!activeLocalLock && data.deviceLocked) {
+        saveLocalLock(lockedWho, state.cycleId);
+      }
+      showLockedScreen(lockedWho);
+      return;
+    }
 
     const pendingCount = state.participants.filter(function (p) {
       return !p.drawn;
@@ -260,31 +473,25 @@
     els.startDrawBtn.disabled = true;
     els.allDoneBox.classList.toggle('hidden', pendingCount > 0);
 
-    // Lista recolhível de status (sem spoilers!)
-    els.statusList.innerHTML = '';
-    state.participants.forEach(function (p) {
-      const li = document.createElement('li');
-      li.className = 'status-list__item' + (p.drawn ? ' status-list__item--done' : '');
-
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'status-list__name';
-      nameSpan.textContent = p.name;
-
-      const iconSpan = document.createElement('span');
-      iconSpan.textContent = p.drawn ? '✅' : '⏳';
-      iconSpan.setAttribute('aria-label', p.drawn ? 'Já sorteou' : 'Pendente');
-
-      li.appendChild(nameSpan);
-      li.appendChild(iconSpan);
-      els.statusList.appendChild(li);
-    });
-    els.statusDetails.classList.toggle('hidden', state.participants.length === 0);
+    renderStatusList(els.statusList, els.statusDetails);
+    showStep(els.stepSelect);
   }
 
   async function loadParticipants() {
     showAlert('');
     els.select.disabled = true;
     els.startDrawBtn.disabled = true;
+
+    // Se já houver bloqueio local, impede imediatamente interação enquanto sincroniza progresso
+    const preLock = readLocalLock();
+    if (preLock && IS_DEMO) {
+      // Em modo demo, recarrega estado mantendo o bloqueio local se existir
+      if (!state.demoMap) initDemoState();
+      if (preLock.participant) {
+        state.demoDrawn[preLock.participant] = true;
+        state.demoUsedDevices[DEVICE_ID] = preLock.participant;
+      }
+    }
 
     try {
       const data = await apiListParticipants();
@@ -293,6 +500,10 @@
       }
       renderParticipants(data);
     } catch (err) {
+      if (preLock) {
+        showLockedScreen(preLock.participant || '');
+        return;
+      }
       els.progressLabel.textContent = 'Não foi possível carregar';
       els.progressPercent.textContent = '!';
       showAlert(
@@ -328,6 +539,13 @@
       const [result] = await Promise.all([apiDrawParticipant(participant), minAnimDelay]);
 
       if (!result || !result.ok) {
+        if (result && result.code === 'DEVICE_ALREADY_USED') {
+          const lockedWho = result.lockedParticipant || '';
+          saveLocalLock(lockedWho, result.cycleId || state.cycleId);
+          showLockedScreen(lockedWho);
+          return;
+        }
+
         showStep(els.stepSelect);
         showAlert(
           (result && result.message) ||
@@ -337,7 +555,14 @@
         return;
       }
 
+      // Trava imediatamente este aparelho (sem salvar quem foi sorteado!)
+      saveLocalLock(participant, result.cycleId || state.cycleId);
       updateProgress(result.completed, result.total);
+
+      // Atualiza estado local da lista para o resumo pós-sorteio
+      state.participants = state.participants.map(function (p) {
+        return p.name === participant ? { name: p.name, drawn: true } : p;
+      });
 
       // Revelação única
       els.revealGiver.textContent = participant;
@@ -359,14 +584,16 @@
   }
 
   function hideRevealSafely() {
-    // Limpa imediatamente o nome da árvore DOM
+    const participantName = state.selectedParticipant || (readLocalLock() && readLocalLock().participant) || '';
+
+    // Limpa imediatamente o nome sorteado da árvore DOM
     els.revealName.textContent = '—';
     els.revealGiver.textContent = '';
     els.ackCheckbox.checked = false;
     els.hideResultBtn.disabled = true;
     state.selectedParticipant = '';
 
-    showStep(els.stepFinished);
+    showLockedScreen(participantName);
   }
 
   // ============================================================================
@@ -447,6 +674,7 @@
       els.giftValue.textContent = CONFIG.GIFT_VALUE;
       els.giftValueDone.textContent = CONFIG.GIFT_VALUE;
       els.giftValueReveal.textContent = CONFIG.GIFT_VALUE;
+      if (els.giftValueLocked) els.giftValueLocked.textContent = CONFIG.GIFT_VALUE;
     }
     if (IS_DEMO) {
       els.demoBanner.classList.remove('hidden');
@@ -486,12 +714,8 @@
 
     els.hideResultBtn.addEventListener('click', hideRevealSafely);
 
-    els.backHomeBtn.addEventListener('click', async function () {
-      showStep(els.stepSelect);
-      await loadParticipants();
-    });
-
     els.demoResetBtn.addEventListener('click', async function () {
+      clearLocalLock();
       initDemoState();
       showStep(els.stepSelect);
       await loadParticipants();

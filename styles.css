@@ -658,14 +658,26 @@ body {
 }
 
 .finished__title {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.55rem;
   color: var(--pine);
 }
 
+.finished__badge {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--pine-soft);
+  color: var(--pine);
+  border: 1px solid rgba(27, 67, 50, 0.2);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .finished__text {
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   font-size: 0.92rem;
   color: var(--ink-muted);
 }

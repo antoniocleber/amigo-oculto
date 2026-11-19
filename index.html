@@ -171,17 +171,23 @@
         </button>
       </section>
 
-      <!-- ETAPA 4: Finalizado com segurança -->
-      <section id="step-finished" class="step step--center hidden">
+      <!-- ETAPA 4: Aparelho bloqueado após sorteio -->
+      <section id="step-finished" class="step step--center hidden" aria-live="polite">
         <div class="finished__icon" aria-hidden="true">🎄</div>
-        <h2 class="finished__title">Sorteio concluído!</h2>
+        <h2 class="finished__title">Sorteio já realizado!</h2>
+        <p id="finished-participant-note" class="finished__badge hidden"></p>
         <p class="finished__text">
-          O resultado foi ocultado da tela com segurança e sua participação já foi registrada na lista.
-          Guarde bem o segredo até a hora da revelação!
+          Por segurança, cada aparelho pode realizar o sorteio <strong>apenas uma vez</strong>.
+          O resultado não fica salvo aqui — guarde bem o segredo até a hora da revelação!
         </p>
-        <button type="button" id="back-home-btn" class="btn btn--ghost">
-          Voltar para a tela inicial
-        </button>
+        <p class="reveal__gift-note">
+          Lembrete: valor sugerido do presente é <strong id="gift-value-locked">R$ 50,00</strong>.
+        </p>
+
+        <details id="locked-status-details" class="status-details hidden">
+          <summary>Ver quem já sorteou</summary>
+          <ul id="locked-status-list" class="status-list"></ul>
+        </details>
       </section>
 
       <footer class="footer">
