@@ -115,7 +115,7 @@
         <div id="all-done-box" class="all-done hidden">
           <p class="all-done__title">🎄 Todos já sortearam!</p>
           <p class="all-done__text">
-            Os 14 participantes concluíram o sorteio. Agora é só preparar o presente de <strong id="gift-value-done">R$ 50,00</strong> e guardar segredo até a revelação!
+            Os <span id="all-done-total">14</span> participantes concluíram o sorteio. Agora é só preparar o presente de <strong id="gift-value-done">R$ 50,00</strong> e guardar segredo até a revelação!
           </p>
         </div>
 
@@ -188,6 +188,11 @@
           <summary>Ver quem já sorteou</summary>
           <ul id="locked-status-list" class="status-list"></ul>
         </details>
+
+        <button type="button" id="refresh-status-btn" class="btn btn--ghost btn--compact">
+          <span aria-hidden="true">🔄</span>
+          <span>Atualizar status</span>
+        </button>
       </section>
 
       <footer class="footer">

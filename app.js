@@ -27,7 +27,7 @@
     'Julia',
     'Vinicius',
     'Denise',
-    'Tia Ciça',
+    'Maria Licia (Tia ciça)',
     'Maílson',
     'Tamires',
   ];
@@ -73,11 +73,13 @@
     select: document.getElementById('participant-select'),
     startDrawBtn: document.getElementById('start-draw-btn'),
     allDoneBox: document.getElementById('all-done-box'),
+    allDoneTotal: document.getElementById('all-done-total'),
     statusDetails: document.getElementById('status-details'),
     statusList: document.getElementById('status-list'),
     lockedStatusDetails: document.getElementById('locked-status-details'),
     lockedStatusList: document.getElementById('locked-status-list'),
     finishedParticipantNote: document.getElementById('finished-participant-note'),
+    refreshStatusBtn: document.getElementById('refresh-status-btn'),
     revealGiver: document.getElementById('reveal-giver'),
     revealName: document.getElementById('reveal-name'),
     ackCheckbox: document.getElementById('ack-saved-checkbox'),
@@ -384,6 +386,9 @@
     els.progressPercent.textContent = pct + '%';
     els.progressFill.style.width = pct + '%';
     els.progressBar.setAttribute('aria-valuenow', String(pct));
+    if (els.allDoneTotal) {
+      els.allDoneTotal.textContent = String(total);
+    }
   }
 
   function renderStatusList(targetUl, targetDetails) {
@@ -430,8 +435,8 @@
     // Verifica trava por aparelho (tanto no servidor quanto local)
     const localLock = readLocalLock();
 
-    // Se o organizador resetou o sorteio (novo cycleId no servidor), destrava testes antigos automaticamente
-    if (!IS_DEMO && localLock && localLock.cycleId && state.cycleId && localLock.cycleId !== state.cycleId) {
+    // Se o organizador resetou o sorteio (novo cycleId no servidor), destrava ciclos antigos automaticamente
+    if (!IS_DEMO && localLock && state.cycleId && localLock.cycleId !== state.cycleId) {
       clearLocalLock();
     }
 
@@ -713,6 +718,17 @@
     });
 
     els.hideResultBtn.addEventListener('click', hideRevealSafely);
+
+    if (els.refreshStatusBtn) {
+      els.refreshStatusBtn.addEventListener('click', async function () {
+        els.refreshStatusBtn.disabled = true;
+        try {
+          await loadParticipants();
+        } finally {
+          els.refreshStatusBtn.disabled = false;
+        }
+      });
+    }
 
     els.demoResetBtn.addEventListener('click', async function () {
       clearLocalLock();
