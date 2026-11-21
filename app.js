@@ -30,6 +30,8 @@
     'Maria Licia (Tia ciça)',
     'Maílson',
     'Tamires',
+    'Laura Sophia',
+    'Maria Aparecida (Dona Cida)',
   ];
 
   const DEMO_COUPLES = [
