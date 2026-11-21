@@ -100,6 +100,26 @@ body {
   z-index: 40;
 }
 
+/* Toast de feedback */
+.toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: var(--pine);
+  color: #FFFFFF;
+  border: 1px solid rgba(246, 228, 164, 0.55);
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 14px 32px rgba(8, 18, 13, 0.45);
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  animation: fadeSlide 0.25s ease;
+}
+
 .page {
   position: relative;
   z-index: 1;
@@ -178,7 +198,7 @@ body {
 /* Cabeçalho */
 .hero {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .hero__icon {
@@ -240,6 +260,67 @@ body {
   border: 1px solid rgba(27, 67, 50, 0.18);
 }
 
+/* Navegação em abas */
+.nav-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 6px;
+  background: var(--cream-muted);
+  border: 1px solid rgba(36, 28, 26, 0.08);
+  border-radius: var(--radius-md);
+  padding: 5px;
+  margin-bottom: 18px;
+}
+
+.nav-tabs__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 10px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-tabs__btn:hover:not(.nav-tabs__btn--active) {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.nav-tabs__btn--active {
+  background: #FFFFFF;
+  color: var(--crimson);
+  box-shadow: 0 4px 12px rgba(36, 28, 26, 0.08);
+}
+
+.nav-tabs__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: #6B4A0D;
+  border: 1px solid rgba(200, 147, 40, 0.38);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.nav-tabs__btn--active .nav-tabs__badge {
+  background: var(--crimson);
+  color: #FFFFFF;
+  border-color: transparent;
+}
+
 /* Progresso */
 .progress-box {
   background: var(--cream-muted);
@@ -294,6 +375,26 @@ body {
   border: 1px solid rgba(139, 30, 36, 0.28);
 }
 
+.alert--compact {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+}
+
+.notice-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--gold-soft);
+  border: 1px solid rgba(200, 147, 40, 0.42);
+  color: #5C420E;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
 /* Etapas */
 .step {
   animation: fadeSlide 0.3s ease;
@@ -316,6 +417,11 @@ body {
 
 .field {
   margin-bottom: 18px;
+}
+
+.field--compact {
+  margin-bottom: 12px;
+  text-align: left;
 }
 
 .field__label {
@@ -342,6 +448,11 @@ body {
   color: var(--ink);
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.select--compact {
+  padding: 11px 14px;
+  font-size: 0.94rem;
 }
 
 .select:focus {
@@ -425,6 +536,11 @@ body {
   margin-top: 16px;
   padding: 11px 16px;
   font-size: 0.88rem;
+}
+
+.btn--compact-top {
+  padding: 13px 16px;
+  font-size: 0.92rem;
 }
 
 /* Todos concluídos */
@@ -580,7 +696,7 @@ body {
 @keyframes revealPop {
   0% {
     opacity: 0;
-    transform: scale(0.84);
+    transform: scale(0.88);
   }
   100% {
     opacity: 1;
@@ -650,11 +766,20 @@ body {
   user-select: none;
 }
 
+.ack-check--compact {
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 0.82rem;
+  padding: 9px 11px;
+  margin-bottom: 12px;
+}
+
 .ack-check input {
   width: 18px;
   height: 18px;
   accent-color: var(--pine);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 /* Etapa finalizada */
@@ -688,6 +813,444 @@ body {
   color: var(--ink-muted);
 }
 
+/* ============================================================================
+   ABA 2: LISTA DE PRESENTES + CARROSSEL SUAVE
+   ============================================================================ */
+
+.wishes-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.wishes-header__info {
+  text-align: center;
+}
+
+.wishes-header__title {
+  margin: 0 0 3px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.38rem;
+  color: var(--crimson);
+}
+
+.wishes-header__subtitle {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-muted);
+}
+
+.btn--wishes-cta {
+  padding: 13px 16px;
+  font-size: 0.94rem;
+}
+
+/* Alternador Carrossel / Ver todos */
+.view-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--cream-muted);
+}
+
+.view-toggle__btn {
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  padding: 8px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.view-toggle__btn--active {
+  background: #FFFFFF;
+  color: var(--pine);
+  box-shadow: 0 2px 8px rgba(36, 28, 26, 0.08);
+}
+
+/* Estado vazio */
+.wishes-empty {
+  text-align: center;
+  padding: 24px 16px;
+  border-radius: var(--radius-md);
+  background: var(--cream-muted);
+  border: 1px dashed rgba(139, 30, 36, 0.2);
+}
+
+.wishes-empty__icon {
+  font-size: 2.2rem;
+  margin-bottom: 6px;
+}
+
+.wishes-empty__title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.96rem;
+}
+
+.wishes-empty__text {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+}
+
+/* Carrossel Suave */
+.carousel {
+  animation: fadeSlide 0.3s ease;
+}
+
+.carousel__track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 2px 10px;
+}
+
+.carousel__track::-webkit-scrollbar {
+  display: none;
+}
+
+.wish-card {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  background: linear-gradient(160deg, #FFFFFF 0%, #FFF9EE 100%);
+  border: 1.5px solid rgba(200, 147, 40, 0.36);
+  border-radius: 18px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 8px 22px rgba(36, 28, 26, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.wish-card--list {
+  flex: none;
+  width: 100%;
+  padding: 15px 15px 13px;
+}
+
+.wish-card--pending {
+  background: var(--cream-muted);
+  border: 1px dashed rgba(36, 28, 26, 0.14);
+  box-shadow: none;
+}
+
+.wish-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(200, 147, 40, 0.22);
+}
+
+.wish-card__person {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.wish-card__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--crimson), var(--crimson-dark));
+  color: #FFFDF8;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.wish-card--pending .wish-card__avatar {
+  background: rgba(36, 28, 26, 0.14);
+  color: var(--ink-muted);
+}
+
+.wish-card__name {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--crimson);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wish-card--pending .wish-card__name {
+  color: var(--ink-muted);
+}
+
+.wish-card__count {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--pine-soft);
+  color: var(--pine);
+}
+
+.wish-card__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wish-card__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(36, 28, 26, 0.06);
+  font-size: 0.88rem;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.wish-card__num {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+  color: #7A540E;
+  border: 1px solid rgba(200, 147, 40, 0.42);
+  font-size: 0.74rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.wish-card__pending-msg {
+  margin: 0;
+  font-size: 0.83rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+/* Controles do Carrossel */
+.carousel__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.carousel__arrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 30, 36, 0.22);
+  background: #FFFFFF;
+  color: var(--crimson);
+  font-size: 1.35rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.carousel__arrow:hover {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+}
+
+.carousel__arrow:active {
+  transform: scale(0.94);
+}
+
+.carousel__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.carousel__dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.carousel__dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(139, 30, 36, 0.22);
+  cursor: pointer;
+  transition: width 0.25s ease, background-color 0.25s ease;
+}
+
+.carousel__dot--active {
+  width: 22px;
+  background: var(--crimson);
+}
+
+.carousel__counter {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+/* Modo Lista Completa + Busca */
+.wishes-list-view {
+  animation: fadeSlide 0.25s ease;
+}
+
+.search-field {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.search-field__icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.search-field__input {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(139, 30, 36, 0.2);
+  border-radius: 12px;
+  padding: 11px 14px 11px 38px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-field__input:focus {
+  outline: none;
+  border-color: var(--crimson);
+  box-shadow: 0 0 0 3px rgba(139, 30, 36, 0.1);
+}
+
+.wishes-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Formulário de Lista de Presentes no Modal */
+.modal__dialog--form {
+  max-width: 440px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  text-align: left;
+  padding: 20px 18px 18px;
+}
+
+.modal__form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.modal__title--left {
+  text-align: left;
+  margin-bottom: 4px;
+  font-size: 1.3rem;
+}
+
+.modal__subtext--left {
+  text-align: left;
+  margin-bottom: 0;
+  font-size: 0.82rem;
+}
+
+.modal__close {
+  border: 0;
+  background: var(--cream-muted);
+  color: var(--ink-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.modal__close:hover {
+  background: rgba(139, 30, 36, 0.12);
+  color: var(--crimson);
+}
+
+.wishes-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.wish-input-row__label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.wish-input-row__label .opt {
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.wish-input {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(36, 28, 26, 0.18);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.wish-input:focus {
+  outline: none;
+  border-color: var(--crimson);
+  box-shadow: 0 0 0 3px rgba(139, 30, 36, 0.1);
+}
+
 /* Rodapé */
 .footer {
   margin-top: 22px;
@@ -709,7 +1272,7 @@ body {
   z-index: 30;
   display: grid;
   place-items: center;
-  padding: 18px;
+  padding: 16px;
 }
 
 .modal__backdrop {
@@ -779,6 +1342,11 @@ body {
     font-size: 1.75rem;
   }
 
+  .nav-tabs__btn {
+    font-size: 0.8rem;
+    padding: 9px 6px;
+  }
+
   .status-list {
     grid-template-columns: 1fr;
   }
@@ -792,7 +1360,13 @@ body {
   .snowflakes,
   .spinner-gift,
   .reveal-card,
-  .step {
+  .step,
+  .carousel,
+  .wishes-list-view {
     animation: none !important;
+  }
+
+  .carousel__track {
+    scroll-behavior: auto;
   }
 }

@@ -6,7 +6,7 @@
   <title>Natal Dos Friends</title>
   <meta
     name="description"
-    content="Selecione seu nome na lista e faça o seu sorteio do Natal Dos Friends! Valor sugerido do presente: R$ 50,00."
+    content="Selecione seu nome na lista, faça o sorteio e cadastre sua Lista de Presentes do Natal Dos Friends! Valor sugerido do presente: R$ 50,00."
   />
 
   <!-- Open Graph / Prévia bonita no WhatsApp -->
@@ -14,7 +14,7 @@
   <meta property="og:title" content="🎁 Natal Dos Friends" />
   <meta
     property="og:description"
-    content="Escolha seu nome e faça seu sorteio! Valor sugerido do presente: R$ 50,00."
+    content="Escolha seu nome, faça seu sorteio e veja a Lista de Presentes! Valor sugerido do presente: R$ 50,00."
   />
   <meta property="og:url" content="https://antoniocleber.github.io/amigo-oculto/" />
   <meta property="og:image" content="https://antoniocleber.github.io/amigo-oculto/og-image.jpg" />
@@ -40,11 +40,14 @@
   <!-- Canvas de confetes na revelação -->
   <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
 
+  <!-- Toast discreto de feedback -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
   <main class="page">
     <!-- Banner de Modo Demonstração (oculto em produção) -->
     <div id="demo-banner" class="demo-banner hidden" role="status">
       <div class="demo-banner__text">
-        <strong>Modo Demonstração:</strong> planilha Google ainda não conectada em <code>config.js</code> (sorteios simulados localmente).
+        <strong>Modo Demonstração:</strong> planilha Google ainda não conectada em <code>config.js</code> (dados simulados localmente).
       </div>
       <button type="button" id="demo-reset-btn" class="demo-banner__btn">Resetar teste</button>
     </div>
@@ -79,131 +82,243 @@
         </div>
       </header>
 
-      <!-- Progresso geral -->
-      <section class="progress-box" aria-label="Progresso do sorteio">
-        <div class="progress-box__top">
-          <span id="progress-label" class="progress-box__label">Carregando participantes...</span>
-          <span id="progress-percent" class="progress-box__percent">—</span>
-        </div>
-        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div id="progress-fill" class="progress-bar__fill"></div>
-        </div>
-      </section>
-
-      <!-- Mensagem de erro/aviso -->
-      <div id="alert-box" class="alert hidden" role="alert"></div>
-
-      <!-- ETAPA 1: Seleção do participante -->
-      <section id="step-select" class="step">
-        <div class="field">
-          <label for="participant-select" class="field__label">Quem é você?</label>
-          <div class="select-wrap">
-            <select id="participant-select" class="select" disabled>
-              <option value="">Carregando lista...</option>
-            </select>
-          </div>
-          <p class="field__hint">
-            Selecione apenas o <strong>seu próprio nome</strong>. Cada pessoa só pode sortear uma única vez.
-          </p>
-        </div>
-
-        <button type="button" id="start-draw-btn" class="btn btn--primary" disabled>
-          <span aria-hidden="true">✨</span>
-          <span>Sortear meu Amigo Oculto</span>
+      <!-- Navegação principal: Sorteio | Lista de Presentes -->
+      <nav id="main-tabs" class="nav-tabs" role="tablist" aria-label="Seções do Natal Dos Friends">
+        <button
+          type="button"
+          id="tab-draw"
+          class="nav-tabs__btn nav-tabs__btn--active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="view-draw"
+        >
+          <span aria-hidden="true">🎲</span>
+          <span>Sorteio</span>
         </button>
+        <button
+          type="button"
+          id="tab-wishes"
+          class="nav-tabs__btn"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-wishes"
+        >
+          <span aria-hidden="true">🎁</span>
+          <span>Lista de Presentes</span>
+          <span id="wishes-tab-badge" class="nav-tabs__badge hidden">0</span>
+        </button>
+      </nav>
 
-        <div id="all-done-box" class="all-done hidden">
-          <p class="all-done__title">🎄 Todos já sortearam!</p>
-          <p class="all-done__text">
-            Os <span id="all-done-total">14</span> participantes concluíram o sorteio. Agora é só preparar o presente de <strong id="gift-value-done">R$ 50,00</strong> e guardar segredo até a revelação!
-          </p>
-        </div>
+      <!-- ================================================================ -->
+      <!-- ABA 1: SORTEIO                                                   -->
+      <!-- ================================================================ -->
+      <div id="view-draw" role="tabpanel" aria-labelledby="tab-draw">
+        <!-- Progresso geral -->
+        <section class="progress-box" aria-label="Progresso do sorteio">
+          <div class="progress-box__top">
+            <span id="progress-label" class="progress-box__label">Carregando participantes...</span>
+            <span id="progress-percent" class="progress-box__percent">—</span>
+          </div>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="progress-fill" class="progress-bar__fill"></div>
+          </div>
+        </section>
 
-        <details id="status-details" class="status-details hidden">
-          <summary>Ver quem já sorteou</summary>
-          <ul id="status-list" class="status-list"></ul>
-        </details>
-      </section>
+        <!-- Mensagem de erro/aviso -->
+        <div id="alert-box" class="alert hidden" role="alert"></div>
 
-      <!-- ETAPA 2: Carregando / Animação do sorteio -->
-      <section id="step-loading" class="step step--center hidden" aria-live="polite">
-        <div class="spinner-gift" aria-hidden="true">🎁</div>
-        <h2 class="step-loading__title">Sorteando seu Amigo Oculto...</h2>
-        <p class="step-loading__text">Embaralhando os nomes em segredo absoluto.</p>
-      </section>
-
-      <!-- ETAPA 3: Revelação Única -->
-      <section id="step-reveal" class="step step--center hidden" aria-live="assertive">
-        <p class="reveal__greeting">
-          Olá, <strong id="reveal-giver"></strong>!
-        </p>
-        <p class="reveal__label">Seu Amigo Oculto é:</p>
-
-        <div class="reveal-card">
-          <span class="reveal-card__sparkle reveal-card__sparkle--left" aria-hidden="true">✦</span>
-          <span id="reveal-name" class="reveal-card__name">—</span>
-          <span class="reveal-card__sparkle reveal-card__sparkle--right" aria-hidden="true">✦</span>
-        </div>
-
-        <div class="warning-box" role="note">
-          <div class="warning-box__icon" aria-hidden="true">📸</div>
-          <div>
-            <strong>Tire um print ou anote agora!</strong>
-            <p>
-              Por segurança e sigilo, este resultado <strong>não fica salvo na planilha</strong> e
-              <strong>não poderá ser visto novamente</strong> depois que você fechar esta tela.
+        <!-- ETAPA 1: Seleção do participante -->
+        <section id="step-select" class="step">
+          <div class="field">
+            <label for="participant-select" class="field__label">Quem é você?</label>
+            <div class="select-wrap">
+              <select id="participant-select" class="select" disabled>
+                <option value="">Carregando lista...</option>
+              </select>
+            </div>
+            <p class="field__hint">
+              Selecione apenas o <strong>seu próprio nome</strong>. Cada pessoa só pode sortear uma única vez.
             </p>
           </div>
+
+          <button type="button" id="start-draw-btn" class="btn btn--primary" disabled>
+            <span aria-hidden="true">✨</span>
+            <span>Sortear meu Amigo Oculto</span>
+          </button>
+
+          <div id="all-done-box" class="all-done hidden">
+            <p class="all-done__title">🎄 Todos já sortearam!</p>
+            <p class="all-done__text">
+              Os <span id="all-done-total">16</span> participantes concluíram o sorteio. Agora é só preparar o presente de <strong id="gift-value-done">R$ 50,00</strong> e guardar segredo até a revelação!
+            </p>
+          </div>
+
+          <details id="status-details" class="status-details hidden">
+            <summary>Ver quem já sorteou</summary>
+            <ul id="status-list" class="status-list"></ul>
+          </details>
+        </section>
+
+        <!-- ETAPA 2: Carregando / Animação do sorteio -->
+        <section id="step-loading" class="step step--center hidden" aria-live="polite">
+          <div class="spinner-gift" aria-hidden="true">🎁</div>
+          <h2 class="step-loading__title">Sorteando seu Amigo Oculto...</h2>
+          <p class="step-loading__text">Embaralhando os nomes em segredo absoluto.</p>
+        </section>
+
+        <!-- ETAPA 3: Revelação Única -->
+        <section id="step-reveal" class="step step--center hidden" aria-live="assertive">
+          <p class="reveal__greeting">
+            Olá, <strong id="reveal-giver"></strong>!
+          </p>
+          <p class="reveal__label">Seu Amigo Oculto é:</p>
+
+          <div class="reveal-card">
+            <span class="reveal-card__sparkle reveal-card__sparkle--left" aria-hidden="true">✦</span>
+            <span id="reveal-name" class="reveal-card__name">—</span>
+            <span class="reveal-card__sparkle reveal-card__sparkle--right" aria-hidden="true">✦</span>
+          </div>
+
+          <div class="warning-box" role="note">
+            <div class="warning-box__icon" aria-hidden="true">📸</div>
+            <div>
+              <strong>Tire um print ou anote agora!</strong>
+              <p>
+                Por segurança e sigilo, este resultado <strong>não fica salvo na planilha</strong> e
+                <strong>não poderá ser visto novamente</strong> depois que você fechar esta tela.
+              </p>
+            </div>
+          </div>
+
+          <p class="reveal__gift-note">
+            Lembrete: valor sugerido do presente é <strong id="gift-value-reveal">R$ 50,00</strong>.
+          </p>
+
+          <label class="ack-check">
+            <input type="checkbox" id="ack-saved-checkbox" />
+            <span>Já anotei ou tirei print do nome acima</span>
+          </label>
+
+          <button type="button" id="hide-result-btn" class="btn btn--secondary" disabled>
+            <span aria-hidden="true">🙈</span>
+            <span>Ocultar resultado e finalizar</span>
+          </button>
+        </section>
+
+        <!-- ETAPA 4: Aparelho bloqueado após sorteio -->
+        <section id="step-finished" class="step step--center hidden" aria-live="polite">
+          <div class="finished__icon" aria-hidden="true">🎄</div>
+          <h2 class="finished__title">Sorteio já realizado!</h2>
+          <p id="finished-participant-note" class="finished__badge hidden"></p>
+          <p class="finished__text">
+            Por segurança, cada aparelho pode realizar o sorteio <strong>apenas uma vez</strong>.
+            O resultado não fica salvo aqui — guarde bem o segredo até a hora da revelação!
+          </p>
+          <p class="reveal__gift-note">
+            Lembrete: valor sugerido do presente é <strong id="gift-value-locked">R$ 50,00</strong>.
+          </p>
+
+          <button type="button" id="go-wishes-from-locked-btn" class="btn btn--secondary btn--compact-top">
+            <span aria-hidden="true">🎁</span>
+            <span>Ver ou cadastrar Lista de Presentes</span>
+          </button>
+
+          <details id="locked-status-details" class="status-details hidden">
+            <summary>Ver quem já sorteou</summary>
+            <ul id="locked-status-list" class="status-list"></ul>
+          </details>
+
+          <button type="button" id="refresh-status-btn" class="btn btn--ghost btn--compact">
+            <span aria-hidden="true">🔄</span>
+            <span>Atualizar status</span>
+          </button>
+        </section>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- ABA 2: LISTA DE PRESENTES                                        -->
+      <!-- ================================================================ -->
+      <div id="view-wishes" class="hidden" role="tabpanel" aria-labelledby="tab-wishes">
+        <div class="wishes-header">
+          <div class="wishes-header__info">
+            <h2 class="wishes-header__title">Lista de Presentes</h2>
+            <p id="wishes-summary" class="wishes-header__subtitle">Carregando sugestões de presentes...</p>
+          </div>
+          <button type="button" id="open-wishes-modal-btn" class="btn btn--primary btn--wishes-cta">
+            <span aria-hidden="true">✏️</span>
+            <span>Cadastrar meus presentes</span>
+          </button>
         </div>
 
-        <p class="reveal__gift-note">
-          Lembrete: valor sugerido do presente é <strong id="gift-value-reveal">R$ 50,00</strong>.
-        </p>
+        <div id="wishes-alert" class="alert hidden" role="alert"></div>
 
-        <label class="ack-check">
-          <input type="checkbox" id="ack-saved-checkbox" />
-          <span>Já anotei ou tirei print do nome acima</span>
-        </label>
+        <!-- Alternador Carrossel / Ver todos -->
+        <div id="wishes-controls" class="view-toggle hidden" role="group" aria-label="Modo de visualização">
+          <button type="button" id="mode-carousel-btn" class="view-toggle__btn view-toggle__btn--active">
+            <span aria-hidden="true">✨</span> Carrossel
+          </button>
+          <button type="button" id="mode-list-btn" class="view-toggle__btn">
+            <span aria-hidden="true">📋</span> Ver todos
+          </button>
+        </div>
 
-        <button type="button" id="hide-result-btn" class="btn btn--secondary" disabled>
-          <span aria-hidden="true">🙈</span>
-          <span>Ocultar resultado e finalizar</span>
-        </button>
-      </section>
+        <!-- Estado de carregamento -->
+        <div id="wishes-loading" class="wishes-empty">
+          <p class="wishes-empty__text">Buscando a Lista de Presentes...</p>
+        </div>
 
-      <!-- ETAPA 4: Aparelho bloqueado após sorteio -->
-      <section id="step-finished" class="step step--center hidden" aria-live="polite">
-        <div class="finished__icon" aria-hidden="true">🎄</div>
-        <h2 class="finished__title">Sorteio já realizado!</h2>
-        <p id="finished-participant-note" class="finished__badge hidden"></p>
-        <p class="finished__text">
-          Por segurança, cada aparelho pode realizar o sorteio <strong>apenas uma vez</strong>.
-          O resultado não fica salvo aqui — guarde bem o segredo até a hora da revelação!
-        </p>
-        <p class="reveal__gift-note">
-          Lembrete: valor sugerido do presente é <strong id="gift-value-locked">R$ 50,00</strong>.
-        </p>
+        <!-- Estado vazio (ninguém cadastrou ainda) -->
+        <div id="wishes-empty" class="wishes-empty hidden">
+          <div class="wishes-empty__icon" aria-hidden="true">🎁</div>
+          <p class="wishes-empty__title">Nenhuma sugestão cadastrada ainda</p>
+          <p class="wishes-empty__text">
+            Seja a primeira pessoa a cadastrar até <strong>5 ideias de presentes</strong> para ajudar seu amigo secreto!
+          </p>
+        </div>
 
-        <details id="locked-status-details" class="status-details hidden">
-          <summary>Ver quem já sorteou</summary>
-          <ul id="locked-status-list" class="status-list"></ul>
-        </details>
+        <!-- Modo Carrossel Suave -->
+        <section id="wishes-carousel-view" class="carousel hidden" aria-label="Carrossel da Lista de Presentes">
+          <div id="carousel-track" class="carousel__track"></div>
 
-        <button type="button" id="refresh-status-btn" class="btn btn--ghost btn--compact">
-          <span aria-hidden="true">🔄</span>
-          <span>Atualizar status</span>
-        </button>
-      </section>
+          <div class="carousel__nav">
+            <button type="button" id="carousel-prev-btn" class="carousel__arrow" aria-label="Participante anterior">
+              ‹
+            </button>
+            <div class="carousel__center">
+              <div id="carousel-dots" class="carousel__dots" role="tablist" aria-label="Indicadores do carrossel"></div>
+              <span id="carousel-counter" class="carousel__counter">1 / 1</span>
+            </div>
+            <button type="button" id="carousel-next-btn" class="carousel__arrow" aria-label="Próximo participante">
+              ›
+            </button>
+          </div>
+        </section>
+
+        <!-- Modo Lista Completa + Busca -->
+        <section id="wishes-list-view" class="wishes-list-view hidden" aria-label="Lista completa de presentes">
+          <div class="search-field">
+            <span class="search-field__icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              id="wishes-search-input"
+              class="search-field__input"
+              placeholder="Buscar participante pelo nome..."
+              autocomplete="off"
+            />
+          </div>
+          <div id="wishes-cards-list" class="wishes-cards"></div>
+        </section>
+      </div>
 
       <footer class="footer">
-        <p>Nenhum nome sorteado é salvo na planilha · Apenas quem já participou é registrado.</p>
+        <p>Nenhum nome sorteado é salvo na planilha · Apenas participação e Lista de Presentes são registradas.</p>
       </footer>
     </article>
   </main>
 
-  <!-- Modal de Confirmação Dupla -->
+  <!-- Modal de Confirmação Dupla do Sorteio -->
   <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-    <div class="modal__backdrop" data-close-modal="true"></div>
+    <div class="modal__backdrop" data-close-modal="confirm"></div>
     <div class="modal__dialog">
       <div class="modal__badge" aria-hidden="true">🎄</div>
       <h2 id="confirm-title" class="modal__title">Confirmar identidade</h2>
@@ -217,6 +332,75 @@
         <button type="button" id="confirm-cancel-btn" class="btn btn--ghost">Cancelar</button>
         <button type="button" id="confirm-proceed-btn" class="btn btn--primary">Sim, sou eu! Sortear</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal de Cadastro / Edição da Lista de Presentes (até 5 itens) -->
+  <div id="wishes-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wishes-modal-title">
+    <div class="modal__backdrop" data-close-modal="wishes"></div>
+    <div class="modal__dialog modal__dialog--form">
+      <div class="modal__form-header">
+        <div>
+          <h2 id="wishes-modal-title" class="modal__title modal__title--left">Minha Lista de Presentes</h2>
+          <p class="modal__subtext modal__subtext--left">
+            Cadastre até <strong>5 sugestões</strong> de presentes (valor sugerido: <strong id="gift-value-wishes">R$ 50,00</strong>).
+          </p>
+        </div>
+        <button type="button" id="wishes-modal-close-btn" class="modal__close" aria-label="Fechar">✕</button>
+      </div>
+
+      <form id="wishes-form" class="wishes-form" novalidate>
+        <div class="field field--compact">
+          <label for="wishes-participant-select" class="field__label">Quem é você?</label>
+          <div class="select-wrap">
+            <select id="wishes-participant-select" class="select select--compact" required>
+              <option value="">— Selecione seu nome —</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="wishes-existing-notice" class="notice-box hidden" role="status">
+          <span>ℹ️</span>
+          <span>
+            Este nome já possui sugestões salvas. Edite abaixo se quiser atualizar sua lista.
+          </span>
+        </div>
+
+        <div class="wishes-inputs">
+          <div class="wish-input-row">
+            <label for="wish-1" class="wish-input-row__label">Presente 1 *</label>
+            <input id="wish-1" class="wish-input" type="text" maxlength="120" placeholder="Ex.: Caneca térmica ou livro de suspense" required />
+          </div>
+          <div class="wish-input-row">
+            <label for="wish-2" class="wish-input-row__label">Presente 2 <span class="opt">(opcional)</span></label>
+            <input id="wish-2" class="wish-input" type="text" maxlength="120" placeholder="Ex.: Kit de chocolates ou perfume suave" />
+          </div>
+          <div class="wish-input-row">
+            <label for="wish-3" class="wish-input-row__label">Presente 3 <span class="opt">(opcional)</span></label>
+            <input id="wish-3" class="wish-input" type="text" maxlength="120" placeholder="Ex.: Camiseta tamanho M ou acessório" />
+          </div>
+          <div class="wish-input-row">
+            <label for="wish-4" class="wish-input-row__label">Presente 4 <span class="opt">(opcional)</span></label>
+            <input id="wish-4" class="wish-input" type="text" maxlength="120" placeholder="Ex.: Vela aromática ou item de decoração" />
+          </div>
+          <div class="wish-input-row">
+            <label for="wish-5" class="wish-input-row__label">Presente 5 <span class="opt">(opcional)</span></label>
+            <input id="wish-5" class="wish-input" type="text" maxlength="120" placeholder="Ex.: Vale-presente ou surpresa criativa" />
+          </div>
+        </div>
+
+        <label id="wishes-confirm-overwrite-wrap" class="ack-check ack-check--compact hidden">
+          <input type="checkbox" id="wishes-confirm-overwrite" />
+          <span>Confirmo que sou <strong id="wishes-confirm-name"></strong> e quero atualizar minha lista</span>
+        </label>
+
+        <div id="wishes-form-error" class="alert alert--compact hidden" role="alert"></div>
+
+        <div class="modal__actions">
+          <button type="button" id="wishes-cancel-btn" class="btn btn--ghost">Cancelar</button>
+          <button type="submit" id="wishes-save-btn" class="btn btn--primary">💾 Salvar presentes</button>
+        </div>
+      </form>
     </div>
   </div>
 
