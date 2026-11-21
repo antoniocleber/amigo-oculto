@@ -23,7 +23,7 @@
     'Camila Nely',
     'Nayara Nely',
     'Lucas Nely',
-    'Lucas Nascimento',
+    'Gessica Santos',
     'Julia',
     'Vinicius',
     'Denise',
